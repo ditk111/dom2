@@ -31,7 +31,7 @@ class Student{
 	ArrayList<String> dept=new ArrayList<>();
 	ArrayList<String> etc=new ArrayList<>();
 	ArrayList<String> because=new ArrayList<>();
-	ArrayList<String> tag=new ArrayList<>();
+	ArrayList<Integer> tag=new ArrayList<>();
 	int penalty=0;
 	boolean caution=false;
 }
@@ -232,16 +232,26 @@ public class Test {
 						//System.out.println(student[i].username.get(j)+" 지연복귀");
 						student[i].because.add("지연복귀");
 						student[i].penalty++;
-
+						
 					}
 				}
 				
-			if(student[i].penalty>=3) {
-				student[i].caution=true;
-			}			
+				if(student[i].penalty>=3) {
+					student[i].caution=true;
+				}
+				
+				
 			}
-			System.out.println();
-			System.out.println("엑셀 파일 다운로드 완료.");
+			
+			//테스트 구문
+			for(int i=0;i<dom_total.size();i++) { // 기숙사생들 일일이 반복문돌면서 비교
+				for(int j=0;j<student[i].date.size();j++) {
+					if(student[i].time.get(j)>=3600&&student[i].time.get(j)<=18000) {
+						student[i].tag.add(j);
+					}
+				}
+			}
+
 			  // 입력된 내용 파일로 쓰기
 			writeExcel(student);
 
@@ -266,16 +276,7 @@ public class Test {
 					System.out.println( student[i].number.get(0)+" "+student[i].username.get(0)+"의 벌점 : "+student[i].penalty +" "+student[i].because);
 				}
 			}
-			
 
-			
-
-			
-			/* 내일 할것 ! 
-			 * 클래스에 caution 변수 불린으로 선언후 벌점 많은사람들만 별도로 표시해야함. - 완료
-			 * 데이터가 잘 출력되는지 검토해야함 - 이상없음 확인완료.
-			 * caution과 일반벌점자들 엑셀파일로 삽입하는 작업
-		*/
 			
 			/* 다음에 할것 !
 			 * 리팩토링 !!
@@ -392,43 +393,42 @@ public class Test {
         //3점이상들은 1번만 출력후 아래 상세표시되게 해야함
         Student vo;
         for(int rowIdx=0; rowIdx < student.length; rowIdx++) {
-
-        	for(int j=0;j<student[rowIdx].date.size();j++) {
-        		
             vo = student[rowIdx];
-	            if(vo.penalty>=3) {
-
-	            
+        	for(int j=0;j<vo.tag.size();j++) {
+        		int k=vo.tag.get(j);
+        		
+	            if(vo.caution) {
+	            	
 	        	// 행 생성
 	            row = sheet.createRow(count++);
 	            
 	            
 	            cell = row.createCell(0);
-	            cell.setCellValue(vo.origin_date.get(j));
+	            cell.setCellValue(vo.origin_date.get(k));
 	            
 	            cell = row.createCell(1);
-	            cell.setCellValue(vo.origin_machine.get(j));
+	            cell.setCellValue(vo.origin_machine.get(k));
 	            
 	            cell = row.createCell(2);
-	            cell.setCellValue(vo.origin_console.get(j));
+	            cell.setCellValue(vo.origin_console.get(k));
 	            
 	            cell = row.createCell(3);
-	            cell.setCellValue(vo.card.get(j));
+	            cell.setCellValue(vo.card.get(k));
 	            
 	            cell = row.createCell(4);
-	            cell.setCellValue(vo.number.get(j));
+	            cell.setCellValue(vo.number.get(k));
 	            
 	            cell = row.createCell(5);
-	            cell.setCellValue(vo.username.get(j));
+	            cell.setCellValue(vo.username.get(k));
 	            
 	            cell = row.createCell(6);
-	            cell.setCellValue(vo.company.get(j));
+	            cell.setCellValue(vo.company.get(k));
 	            
 	            cell = row.createCell(7);
-	            cell.setCellValue(vo.dept.get(j));
+	            cell.setCellValue(vo.dept.get(k));
 	            
 	            cell = row.createCell(8);
-	            cell.setCellValue(vo.etc.get(j));
+	            cell.setCellValue(vo.etc.get(k));
 	            
 	            
 	            /*
@@ -485,6 +485,90 @@ public class Test {
         	}
         }
         
+        count++;
+        row=sheet.createRow(count);
+        count++;
+        
+        cell=row.createCell(0);
+        cell.setCellValue("벌점 3점미만 사생들 상세목록");
+        
+        row=sheet.createRow(count);
+        count++;
+        
+        // 헤더 정보 구성
+        cell=row.createCell(0);
+        cell.setCellValue("일시");
+        
+        cell=row.createCell(1);
+        cell.setCellValue("기기 명");
+        
+        cell=row.createCell(2);
+        cell.setCellValue("콘솔 명");
+        
+        cell=row.createCell(3);
+        cell.setCellValue("카드 아이디");
+        
+        cell=row.createCell(4);
+        cell.setCellValue("사번");
+        
+        cell=row.createCell(5);
+        cell.setCellValue("사용자 명");
+        
+        cell=row.createCell(6);
+        cell.setCellValue("근무 회사");
+        
+        cell=row.createCell(7);
+        cell.setCellValue("근무 부서");
+        
+        cell=row.createCell(8);
+        cell.setCellValue("구분");
+        
+        for(int rowIdx=0; rowIdx < student.length; rowIdx++) {
+            vo = student[rowIdx];
+        	for(int j=0;j<vo.tag.size();j++) {
+        		int k=vo.tag.get(j);
+        		
+	            if(vo.penalty>=1&&vo.penalty<3) {
+	            	
+	        	// 행 생성
+	            row = sheet.createRow(count++);
+	            
+	            
+	            cell = row.createCell(0);
+	            cell.setCellValue(vo.origin_date.get(k));
+	            
+	            cell = row.createCell(1);
+	            cell.setCellValue(vo.origin_machine.get(k));
+	            
+	            cell = row.createCell(2);
+	            cell.setCellValue(vo.origin_console.get(k));
+	            
+	            cell = row.createCell(3);
+	            cell.setCellValue(vo.card.get(k));
+	            
+	            cell = row.createCell(4);
+	            cell.setCellValue(vo.number.get(k));
+	            
+	            cell = row.createCell(5);
+	            cell.setCellValue(vo.username.get(k));
+	            
+	            cell = row.createCell(6);
+	            cell.setCellValue(vo.company.get(k));
+	            
+	            cell = row.createCell(7);
+	            cell.setCellValue(vo.dept.get(k));
+	            
+	            cell = row.createCell(8);
+	            cell.setCellValue(vo.etc.get(k));
+	            
+	            
+	            /*
+	            cell = row.createCell(3);
+	            cell.setCellValue(vo.penalty);*/
+	            }
+        	}
+        }
+        
         
         
         // 입력된 내용 파일로 쓰기
@@ -494,6 +578,10 @@ public class Test {
         try {
             fos = new FileOutputStream(file);
             workbook.write(fos);
+            
+			System.out.println();
+			System.out.println("엑셀 파일 다운로드 완료.");
+			
         } catch (FileNotFoundException e) {
             System.out.println("에러 : student 엑셀 파일을 닫고 다시 실행해주세요.");
             e.printStackTrace();
