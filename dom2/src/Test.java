@@ -43,7 +43,383 @@ class Student{
 	boolean caution=false;
 }
 
+class Excel{			
+public static String[][] readExcel() {
+		try {
+			FileInputStream file = new FileInputStream("C:\\Users\\user\\Desktop\\개발관련자료\\dom2\\2.xlsx");
+	        XSSFWorkbook workbook = new XSSFWorkbook(file);
+	           
+	        XSSFSheet sheet=workbook.getSheetAt(0);   //시트 수 (첫번째에만 존재하므로 0을 준다) / 만약 각 시트를 읽기위해서는 FOR문을 한번더 돌려준다
+	        String value="";   // 담을 값 초기화
+	        int rowindex=0;    // 행 인덱스 초기화
+	        int columnindex=0; // 열 인덱스 초기화
+	        int rows=sheet.getPhysicalNumberOfRows();// 총 행의 수
+	            
+	        XSSFRow firstrow=sheet.getRow(rowindex); //첫행 읽어오기
+	        int firstcells=firstrow.getPhysicalNumberOfCells(); // 첫행의 열의 수 구하기
+	            
+	        String[][] human=new String[rows][firstcells]; //2차원배열 초기화
+
+	        for(rowindex=0;rowindex<rows;rowindex++){
+	            XSSFRow row=sheet.getRow(rowindex); //행 읽어오기
+	            if(row !=null){
+	                int cells=row.getPhysicalNumberOfCells(); // 열의 수 읽어오기
+	                for(columnindex=0; columnindex<=cells; columnindex++){
+	                    //셀값을 읽는다
+	                    XSSFCell cell=row.getCell(columnindex);
+	                    /*String value="";
+	                    //셀이 빈값일경우를 위한 널체크*/
+	                    if(cell==null){
+	                        continue;
+	                    }else{
+	                        //타입별로 내용 읽기
+	                        switch (cell.getCellType()){
+	                        case FORMULA:
+	                            value=cell.getCellFormula();
+	                            break;
+	                        case NUMERIC:
+	                            value=cell.getNumericCellValue()+"";
+	                            break;
+	                        case STRING: // 실제로는 String 값만 받아들임. 빈칸도 String으로 받아들임.
+	                            value=cell.getStringCellValue()+"";
+	                            break;
+	                        case BLANK:
+	                            value=cell.getBooleanCellValue()+"";
+	                            break;
+	                        case ERROR:
+	                            value=cell.getErrorCellValue()+"";
+	                            break;
+	                        }
+	                    }
+	                    human[rowindex][columnindex]=value;
+	                }
+	            }
+	        }
+	        return human;
+ 
+	}catch(Exception e) {
+		e.printStackTrace();
+	}
+	return null;
+	}
+
+public static void writeExcel(Student[] student) {
+	
+		 // 워크북 생성
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        
+        // 워크시트 생성
+        XSSFSheet sheet = workbook.createSheet();
+        // 행 생성
+        XSSFRow row=sheet.createRow(1);
+        // 쎌 생성
+        XSSFCell cell=row.createCell(0);
+        
+        //title
+        XSSFFont TitleFont=workbook.createFont();
+        TitleFont.setFontHeightInPoints((short)13);
+        TitleFont.setFontName("맑은 고딕");
+        TitleFont.setColor(IndexedColors.BLUE.getIndex());
+        TitleFont.setBold(true);
+        
+        CellStyle TitleStyle=workbook.createCellStyle();
+        TitleStyle.setAlignment(HorizontalAlignment.CENTER);
+        TitleStyle.setFont(TitleFont);
+        
+        //Head
+        XSSFFont HeadFont=workbook.createFont();
+        HeadFont.setBold(true);
+        HeadFont.setFontHeightInPoints((short)13);
+        HeadFont.setFontName("맑은 고딕");
+        
+        CellStyle HeadStyle=workbook.createCellStyle();
+        HeadStyle.setAlignment(HorizontalAlignment.CENTER);
+        HeadStyle.setFillForegroundColor(HSSFColorPredefined.GREY_25_PERCENT.getIndex());
+        HeadStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        HeadStyle.setBorderTop(BorderStyle.THIN);
+        HeadStyle.setBorderBottom(BorderStyle.THIN);
+        HeadStyle.setBorderLeft(BorderStyle.THIN);
+        HeadStyle.setBorderRight(BorderStyle.THIN);
+        HeadStyle.setFont(HeadFont);
+        
+        //Body
+        XSSFFont BodyFont=workbook.createFont();
+        BodyFont.setFontHeightInPoints((short)11);
+        BodyFont.setFontName("맑은 고딕");
+        
+        CellStyle BodyStyle=workbook.createCellStyle();
+        BodyStyle.setAlignment(HorizontalAlignment.CENTER);
+        BodyStyle.setBorderTop(BorderStyle.THIN);
+        BodyStyle.setBorderBottom(BorderStyle.THIN);
+        BodyStyle.setBorderLeft(BorderStyle.THIN);
+        BodyStyle.setBorderRight(BorderStyle.THIN);
+        BodyStyle.setFont(BodyFont);
+        
+        // 여백
+        sheet.setColumnWidth(0, (short)8000); //일시
+        sheet.setColumnWidth(1, (short)3500); //기기명
+        sheet.setColumnWidth(2, (short)6500); //콘솔명
+        sheet.setColumnWidth(3, (short)3000); //카드 아이디
+        sheet.setColumnWidth(4, (short)3000); // 사번
+        sheet.setColumnWidth(5, (short)3500); // 사용자 명
+        sheet.setColumnWidth(6, (short)3000); // 근무회사
+        sheet.setColumnWidth(7, (short)3000); // 근무부서
+        sheet.setColumnWidth(8, (short)3000); // 구분
+
+        int count=1; // count는 행 위치를 나타냄
+        
+
+        count=print_simple(count,3,sheet,row,cell,TitleStyle,HeadStyle,BodyStyle,student);	// 벌점 3점이상 사생들
+
+        count++;
+        count=print_detail(count,3,sheet,row,cell,TitleStyle,HeadStyle,BodyStyle,student);	// 벌점 3점이상 사생들 상세목록
+        
+        count++;
+        count=print_simple(count,1,sheet,row,cell,TitleStyle,HeadStyle,BodyStyle,student);	// 벌점 3점미만 사생들
+                
+        count++;
+        count=print_detail(count,1,sheet,row,cell,TitleStyle,HeadStyle,BodyStyle,student);	// 벌점 3점미만 사생들 상세목록
+        
+        // 입력된 내용 파일로 쓰기
+        File file = new File("C:\\Users\\user\\Desktop\\개발관련자료\\dom2\\student.xlsx");
+        FileOutputStream fos = null;
+        
+        try {
+            fos = new FileOutputStream(file);
+            workbook.write(fos);
+            
+			System.out.println();
+			System.out.println("--------------- 엑셀 파일 다운로드 완료. ---------------");
+			System.out.println();
+			
+        } catch (FileNotFoundException e) {
+            System.out.println("에러 : student 엑셀 파일을 닫고 다시 실행해주세요.");
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if(workbook!=null) workbook.close();
+                if(fos!=null) fos.close();
+                
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+		
+		
+	}
+
+public static int print_simple(int count,int penalty,XSSFSheet sheet,XSSFRow row,XSSFCell cell,CellStyle TitleStyle,CellStyle HeadStyle,CellStyle BodyStyle,Student[] student) {
+	
+	row = sheet.createRow(count);
+    cell=row.createCell(0);
+    if(penalty>=3) {
+    	cell.setCellValue("벌점 3점이상 사생들");
+    }
+    else {
+    	cell.setCellValue("벌점 3점미만 사생들");	
+    }
+    cell.setCellStyle(TitleStyle);
+    count++;
+    
+    row=sheet.createRow(count);
+    cell=row.createCell(0);
+    cell.setCellValue("사번");
+    cell.setCellStyle(HeadStyle);
+
+    cell=row.createCell(1);
+    cell.setCellValue("이름");
+    cell.setCellStyle(HeadStyle);
+
+    cell=row.createCell(2);
+    cell.setCellValue("사유");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(3);
+    cell.setCellValue("벌점");
+    cell.setCellStyle(HeadStyle);
+    count++;
+    
+    int a = 0,b=0;
+    
+    if(penalty==3) {
+    	a=3;
+    	b=20;    	
+    }
+    else if(penalty==1) {
+    	a=1;
+    	b=3;
+    }
+    
+    for(int i=0;i<student.length;i++) {
+    	for(int j=0;j<student[i].date.size();j++) {
+    		if(student[i].penalty>=a&&student[i].penalty<b) { // if문을 한칸 밖에하면 조금이라도 더 빨라지지않을까?
+    			row=sheet.createRow(count);
+    			
+    			cell = row.createCell(0);
+    			cell.setCellValue(student[i].number.get(j));
+    	        cell.setCellStyle(BodyStyle);
+    			
+                cell = row.createCell(1);
+    			cell.setCellValue(student[i].username.get(j));
+    	        cell.setCellStyle(BodyStyle);
+    	        
+    	        cell=row.createCell(2);
+    			String s="";
+    			for(int k=0;k<student[i].because.size();k++) {
+    				s+=student[i].because.get(k)+" ";
+    			}
+    			cell.setCellValue(s);
+    	        cell.setCellStyle(BodyStyle);
+    			
+    			cell = row.createCell(3);
+    			cell.setCellValue(student[i].penalty+" 점");
+    	        cell.setCellStyle(BodyStyle);
+    			
+    			count++;
+    			break;
+    		}
+    		
+    	}
+    }
+	
+	return count;
+}
+
+public static int print_detail(int count,int penalty,XSSFSheet sheet,XSSFRow row,XSSFCell cell,CellStyle TitleStyle,CellStyle HeadStyle,CellStyle BodyStyle,Student[] student) {
+	
+	row=sheet.createRow(count);
+    
+    cell=row.createCell(0);
+    if(penalty>=3) {
+    	cell.setCellValue("벌점 3점이상 사생들 상세목록");
+    }
+    else {
+    	cell.setCellValue("벌점 3점미만 사생들 상세목록");
+    }
+    cell.setCellStyle(TitleStyle);
+    count++;
+    
+    row=sheet.createRow(count);
+    
+    // 헤더 정보 구성
+    cell=row.createCell(0);
+    cell.setCellValue("일시");
+    cell.setCellStyle(HeadStyle);
+
+    
+    cell=row.createCell(1);
+    cell.setCellValue("기기 명");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(2);
+    cell.setCellValue("콘솔 명");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(3);
+    cell.setCellValue("카드 아이디");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(4);
+    cell.setCellValue("사번");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(5);
+    cell.setCellValue("사용자 명");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(6);
+    cell.setCellValue("근무 회사");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(7);
+    cell.setCellValue("근무 부서");
+    cell.setCellStyle(HeadStyle);
+    
+    cell=row.createCell(8);
+    cell.setCellValue("구분");
+    cell.setCellStyle(HeadStyle);
+    count++;
+    
+    int a=0,b=0;
+    
+    if(penalty==3) {
+    	a=3;
+    	b=20;
+    }
+    else if(penalty==1) {
+    	a=1;
+    	b=3;
+    }
+    
+
+    Student vo;
+    for(int rowIdx=0; rowIdx < student.length; rowIdx++) {
+        vo = student[rowIdx];
+    	for(int j=0;j<vo.tag.size();j++) {
+    		int k=vo.tag.get(j);
+    		
+            if(student[rowIdx].penalty>=a&&student[rowIdx].penalty<b) {
+            	
+        	// 행 생성
+            row = sheet.createRow(count++);
+            
+            cell = row.createCell(0);
+            cell.setCellValue(vo.origin_date.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(1);
+            cell.setCellValue(vo.origin_machine.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(2);
+            cell.setCellValue(vo.origin_console.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(3);
+            cell.setCellValue(vo.card.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(4);
+            cell.setCellValue(vo.number.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(5);
+            cell.setCellValue(vo.username.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(6);
+            cell.setCellValue(vo.company.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(7);
+            cell.setCellValue(vo.dept.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            cell = row.createCell(8);
+            cell.setCellValue(vo.etc.get(k));
+	        cell.setCellStyle(BodyStyle);
+            
+            }
+    	}
+    }
+	
+	return count;
+}
+
+}
+
 public class Test {
+	public static void pause() {
+		try {
+			System.out.println("Enter 키를 입력시 프로그램이 종료됩니다.");
+			System.in.read();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
 	public static void main(String[] args) {
 		
 		Scanner sc = new Scanner(System.in);
@@ -53,10 +429,11 @@ public class Test {
 		
 		String human[][];
 		//엑셀파일 읽는 부분
-		human=readExcel();
+		human=Excel.readExcel();
+		
 		int row=human.length;
 
-		/*
+		/* readExcel() 메소드를 통해 human에 값이 잘 실렸는지 확인하는 구문
 		for(int i=0;i<row;i++) {
           	for(int j=0;j<human[i].length;j++) {
             	System.out.print(human[i][j]+" ");
@@ -133,7 +510,7 @@ public class Test {
 				}
 			}
 			
-			//반복문 돌리면서 데이터출력 체크
+			//반복문 돌리면서 데이터가 제대로 삽입되었는지 확인하는 구문
 			/*
 			for(int i=0;i<dom_total.size();i++) {
 				for(int j=0;j<student[i].date.size();j++) {
@@ -209,7 +586,7 @@ public class Test {
 			}
 			
 			  // 입력된 내용 파일로 쓰기
-			writeExcel(student);
+			Excel.writeExcel(student);
 
 			// 데이터 출력 구문
 			System.out.println();
@@ -231,466 +608,11 @@ public class Test {
 					System.out.println(student[i].number.get(0)+" "+student[i].username.get(0)+"의 벌점 : "+student[i].penalty +" "+student[i].because);
 				}
 			}
-	}
-			
-public static String[][] readExcel() {
-		try {
-			FileInputStream file = new FileInputStream("C:\\Users\\user\\Desktop\\개발관련자료\\dom2\\2.xlsx");
-	        XSSFWorkbook workbook = new XSSFWorkbook(file);
-	           
-	        XSSFSheet sheet=workbook.getSheetAt(0);   //시트 수 (첫번째에만 존재하므로 0을 준다) / 만약 각 시트를 읽기위해서는 FOR문을 한번더 돌려준다
-	        String value="";   // 담을 값 초기화
-	        int rowindex=0;    // 행 인덱스 초기화
-	        int columnindex=0; // 열 인덱스 초기화
-	        int rows=sheet.getPhysicalNumberOfRows();// 총 행의 수
-	            
-	        XSSFRow firstrow=sheet.getRow(rowindex); //첫행 읽어오기
-	        int firstcells=firstrow.getPhysicalNumberOfCells(); // 첫행의 열의 수 구하기
-	            
-	        String[][] human=new String[rows][firstcells]; //2차원배열 초기화
-
-	        for(rowindex=0;rowindex<rows;rowindex++){
-	            XSSFRow row=sheet.getRow(rowindex); //행 읽어오기
-	            if(row !=null){
-	                int cells=row.getPhysicalNumberOfCells(); // 열의 수 읽어오기
-	                for(columnindex=0; columnindex<=cells; columnindex++){
-	                    //셀값을 읽는다
-	                    XSSFCell cell=row.getCell(columnindex);
-	                    /*String value="";
-	                    //셀이 빈값일경우를 위한 널체크*/
-	                    if(cell==null){
-	                        continue;
-	                    }else{
-	                        //타입별로 내용 읽기
-	                        switch (cell.getCellType()){
-	                        case FORMULA:
-	                            value=cell.getCellFormula();
-	                            break;
-	                        case NUMERIC:
-	                            value=cell.getNumericCellValue()+"";
-	                            break;
-	                        case STRING: // 실제로는 String 값만 받아들임. 빈칸도 String으로 받아들임.
-	                            value=cell.getStringCellValue()+"";
-	                            break;
-	                        case BLANK:
-	                            value=cell.getBooleanCellValue()+"";
-	                            break;
-	                        case ERROR:
-	                            value=cell.getErrorCellValue()+"";
-	                            break;
-	                        }
-	                    }
-	                    human[rowindex][columnindex]=value;
-	                }
-	            }
-	        }
-	        return human;
- 
-	}catch(Exception e) {
-		e.printStackTrace();
-	}
-	return null;
-	}
-
-
-
-	
-	
-public static void writeExcel(Student[] student) {
-	
-		 // 워크북 생성
-        XSSFWorkbook workbook = new XSSFWorkbook();
-        
-        // 워크시트 생성
-        XSSFSheet sheet = workbook.createSheet();
-        // 행 생성
-        XSSFRow row = sheet.createRow(1);
-        // 쎌 생성
-        XSSFCell cell;
-        
-        //title
-        XSSFFont TitleFont=workbook.createFont();
-        TitleFont.setFontHeightInPoints((short)13);
-        TitleFont.setFontName("맑은 고딕");
-        TitleFont.setColor(IndexedColors.BLUE.getIndex());
-        TitleFont.setBold(true);
-        
-        CellStyle TitleStyle=workbook.createCellStyle();
-        TitleStyle.setAlignment(HorizontalAlignment.CENTER);
-        TitleStyle.setFont(TitleFont);
-        
-        //Head
-        XSSFFont HeadFont=workbook.createFont();
-        HeadFont.setBold(true);
-        HeadFont.setFontHeightInPoints((short)13);
-        HeadFont.setFontName("맑은 고딕");
-        
-        CellStyle HeadStyle=workbook.createCellStyle();
-        HeadStyle.setAlignment(HorizontalAlignment.CENTER);
-        HeadStyle.setFillForegroundColor(HSSFColorPredefined.GREY_25_PERCENT.getIndex());
-        HeadStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        HeadStyle.setBorderTop(BorderStyle.THIN);
-        HeadStyle.setBorderBottom(BorderStyle.THIN);
-        HeadStyle.setBorderLeft(BorderStyle.THIN);
-        HeadStyle.setBorderRight(BorderStyle.THIN);
-        HeadStyle.setFont(HeadFont);
-        
-        //Body
-        XSSFFont BodyFont=workbook.createFont();
-        BodyFont.setFontHeightInPoints((short)11);
-        BodyFont.setFontName("맑은 고딕");
-        
-        CellStyle BodyStyle=workbook.createCellStyle();
-        BodyStyle.setAlignment(HorizontalAlignment.CENTER);
-        BodyStyle.setBorderTop(BorderStyle.THIN);
-        BodyStyle.setBorderBottom(BorderStyle.THIN);
-        BodyStyle.setBorderLeft(BorderStyle.THIN);
-        BodyStyle.setBorderRight(BorderStyle.THIN);
-        BodyStyle.setFont(BodyFont);
-        
-        // 여백
-        sheet.setColumnWidth(0, (short)8000); //일시
-        sheet.setColumnWidth(1, (short)3500); //기기명
-        sheet.setColumnWidth(2, (short)6500); //콘솔명
-        sheet.setColumnWidth(3, (short)3000); //카드 아이디
-        sheet.setColumnWidth(4, (short)3000); // 사번
-        sheet.setColumnWidth(5, (short)3500); // 사용자 명
-        sheet.setColumnWidth(6, (short)3000); // 근무회사
-        sheet.setColumnWidth(7, (short)3000); // 근무부서
-        sheet.setColumnWidth(8, (short)3000); // 구분
-
-        int count=1;
-
-        cell=row.createCell(0);
-        count++;
-        cell.setCellValue("벌점 3점이상 사생들");
-        cell.setCellStyle(TitleStyle);
-        
-        row=sheet.createRow(count);
-        count++;
-        cell=row.createCell(0);
-        cell.setCellValue("사번");
-        cell.setCellStyle(HeadStyle);
-
-        cell=row.createCell(1);
-        cell.setCellValue("이름");
-        cell.setCellStyle(HeadStyle);
-
-        cell=row.createCell(2);
-        cell.setCellValue("사유");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(3);
-        cell.setCellValue("벌점");
-        cell.setCellStyle(HeadStyle);
-        
-
-
-        
-        for(int i=0;i<student.length;i++) {
-        	for(int j=0;j<student[i].date.size();j++) {
-        		if(student[i].penalty>=3) {
-        			row=sheet.createRow(count);
-        			
-        			cell = row.createCell(0);
-        			cell.setCellValue(student[i].number.get(j));
-        	        cell.setCellStyle(BodyStyle);
-        			
-                    cell = row.createCell(1);
-        			cell.setCellValue(student[i].username.get(j));
-        	        cell.setCellStyle(BodyStyle);
-        	        
-        	        cell=row.createCell(2);
-        			String s="";
-        			for(int k=0;k<student[i].because.size();k++) {
-        				s+=student[i].because.get(k)+" ";
-        			}
-        			cell.setCellValue(s);
-        	        cell.setCellStyle(BodyStyle);
-        			
-        			cell = row.createCell(3);
-        			cell.setCellValue(student[i].penalty+" 점");
-        	        cell.setCellStyle(BodyStyle);
-        			
-        			count++;
-        			break;
-        		}
-        	}
-        }
-        
-        count++;
-        row=sheet.createRow(count);
-        count++;
-        
-        cell=row.createCell(0);
-        cell.setCellValue("벌점 3점이상 사생들 상세목록");
-        cell.setCellStyle(TitleStyle);
-        
-        row=sheet.createRow(count);
-        count++;
-        
-        // 헤더 정보 구성
-        cell=row.createCell(0);
-        cell.setCellValue("일시");
-        cell.setCellStyle(HeadStyle);
-
-        
-        cell=row.createCell(1);
-        cell.setCellValue("기기 명");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(2);
-        cell.setCellValue("콘솔 명");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(3);
-        cell.setCellValue("카드 아이디");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(4);
-        cell.setCellValue("사번");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(5);
-        cell.setCellValue("사용자 명");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(6);
-        cell.setCellValue("근무 회사");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(7);
-        cell.setCellValue("근무 부서");
-        cell.setCellStyle(HeadStyle);
-        
-        cell=row.createCell(8);
-        cell.setCellValue("구분");
-        cell.setCellStyle(HeadStyle);
-        
-
-        
-        // 리스트의 size 만큼 row를 생성
-        
-        //3점이상들은 1번만 출력후 아래 상세표시되게 해야함
-        Student vo;
-        for(int rowIdx=0; rowIdx < student.length; rowIdx++) {
-            vo = student[rowIdx];
-        	for(int j=0;j<vo.tag.size();j++) {
-        		int k=vo.tag.get(j);
-        		
-	            if(vo.caution) {
-	            	
-	        	// 행 생성
-	            row = sheet.createRow(count++);
-	            
-	            
-	            cell = row.createCell(0);
-	            cell.setCellValue(vo.origin_date.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(1);
-	            cell.setCellValue(vo.origin_machine.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(2);
-	            cell.setCellValue(vo.origin_console.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(3);
-	            cell.setCellValue(vo.card.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(4);
-	            cell.setCellValue(vo.number.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(5);
-	            cell.setCellValue(vo.username.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(6);
-	            cell.setCellValue(vo.company.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(7);
-	            cell.setCellValue(vo.dept.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            cell = row.createCell(8);
-	            cell.setCellValue(vo.etc.get(k));
-    	        cell.setCellStyle(BodyStyle);
-	            
-	            
-	            /*
-	            cell = row.createCell(3);
-	            cell.setCellValue(vo.penalty);*/
-	            }
-        	}
-        }
-        
-        count++;
-        row = sheet.createRow(count);
-        cell=row.createCell(4);
-        count++;
-        cell.setCellValue("벌점 3점미만 사생들");
-        
-        row=sheet.createRow(count);
-        count++;
-        cell=row.createCell(4);
-        cell.setCellValue("사번");
-        
-        cell=row.createCell(5);
-        cell.setCellValue("이름");
-        
-        cell=row.createCell(6);
-        cell.setCellValue("벌점");
-        
-        cell=row.createCell(7);
-        cell.setCellValue("사유");
-
-        
-        for(int i=0;i<student.length;i++) {
-        	for(int j=0;j<student[i].date.size();j++) {
-        		if(student[i].penalty>0&&student[i].penalty<3) {
-        			row=sheet.createRow(count);
-        			
-        			cell = row.createCell(4);
-        			cell.setCellValue(student[i].number.get(j));
-        			
-                    cell = row.createCell(5);
-        			cell.setCellValue(student[i].username.get(j));
-        			
-        			cell = row.createCell(6);
-        			cell.setCellValue(student[i].penalty+" 점");
-        			
-        			cell=row.createCell(7);
-        			String s="";
-        			for(int k=0;k<student[i].because.size();k++) {
-        				s+=student[i].because.get(k)+" ";
-        			}
-        			cell.setCellValue(s);
-        			count++;
-        			break;
-        		}
-        	}
-        }
-        
-        count++;
-        row=sheet.createRow(count);
-        count++;
-        
-        cell=row.createCell(0);
-        cell.setCellValue("벌점 3점미만 사생들 상세목록");
-        
-        row=sheet.createRow(count);
-        count++;
-        
-        // 헤더 정보 구성
-        cell=row.createCell(0);
-        cell.setCellValue("일시");
-        
-        cell=row.createCell(1);
-        cell.setCellValue("기기 명");
-        
-        cell=row.createCell(2);
-        cell.setCellValue("콘솔 명");
-        
-        cell=row.createCell(3);
-        cell.setCellValue("카드 아이디");
-        
-        cell=row.createCell(4);
-        cell.setCellValue("사번");
-        
-        cell=row.createCell(5);
-        cell.setCellValue("사용자 명");
-        
-        cell=row.createCell(6);
-        cell.setCellValue("근무 회사");
-        
-        cell=row.createCell(7);
-        cell.setCellValue("근무 부서");
-        
-        cell=row.createCell(8);
-        cell.setCellValue("구분");
-        
-        for(int rowIdx=0; rowIdx < student.length; rowIdx++) {
-            vo = student[rowIdx];
-        	for(int j=0;j<vo.tag.size();j++) {
-        		int k=vo.tag.get(j);
-        		
-	            if(vo.penalty>=1&&vo.penalty<3) {
-	            	
-	        	// 행 생성
-	            row = sheet.createRow(count++);
-	            
-	            
-	            cell = row.createCell(0);
-	            cell.setCellValue(vo.origin_date.get(k));
-	            
-	            cell = row.createCell(1);
-	            cell.setCellValue(vo.origin_machine.get(k));
-	            
-	            cell = row.createCell(2);
-	            cell.setCellValue(vo.origin_console.get(k));
-	            
-	            cell = row.createCell(3);
-	            cell.setCellValue(vo.card.get(k));
-	            
-	            cell = row.createCell(4);
-	            cell.setCellValue(vo.number.get(k));
-	            
-	            cell = row.createCell(5);
-	            cell.setCellValue(vo.username.get(k));
-	            
-	            cell = row.createCell(6);
-	            cell.setCellValue(vo.company.get(k));
-	            
-	            cell = row.createCell(7);
-	            cell.setCellValue(vo.dept.get(k));
-	            
-	            cell = row.createCell(8);
-	            cell.setCellValue(vo.etc.get(k));
-	            
-	            
-	            /*
-	            cell = row.createCell(3);
-	            cell.setCellValue(vo.penalty);*/
-	            }
-        	}
-        }
-        
-        
-        
-        // 입력된 내용 파일로 쓰기
-        File file = new File("C:\\Users\\user\\Desktop\\개발관련자료\\dom2\\student.xlsx");
-        FileOutputStream fos = null;
-        
-        try {
-            fos = new FileOutputStream(file);
-            workbook.write(fos);
-            
 			System.out.println();
-			System.out.println("--------------- 엑셀 파일 다운로드 완료. ---------------");
+			System.out.println("프로그램 실행이 완료되었습니다.");
 			System.out.println();
+			pause();
 			
-        } catch (FileNotFoundException e) {
-            System.out.println("에러 : student 엑셀 파일을 닫고 다시 실행해주세요.");
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if(workbook!=null) workbook.close();
-                if(fos!=null) fos.close();
-                
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-		
-		
 	}
+	
 }
-
-
